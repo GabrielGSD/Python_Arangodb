@@ -53,6 +53,58 @@ def deleteData(collection, key):
 # deleteData(studentsCollection, '5213')
 
 '''   Utilizando AQL Usage   '''
-aql = "FOR x IN Students RETURN { [x._key] : {['name']:x.name, ['surname']:x.surname, ['age']: x.age} }"
-queryResult = db.AQLQuery(aql, rawResults=True, batchSize=100)
-print(list(queryResult))
+def listWithAQL():
+   aql = "FOR x IN Students RETURN { [x._key] : {['name']:x.name, ['surname']:x.surname, ['age']: x.age} }"
+   queryResult = db.AQLQuery(aql, rawResults=True, batchSize=100)
+   print(list(queryResult))
+
+# listWithAQL()
+
+def insertWithAQL(doc, collection):
+   try:
+      bind = {"doc": doc}
+      aql = "INSERT @doc INTO " + collection + " LET newDoc = NEW RETURN newDoc"
+      queryResult = db.AQLQuery(aql, bindVars=bind)
+      print("Dados adicionado com sucesso")   
+   except: 
+      print("Erro ao adicionar dados")
+
+doc = {'name': 'Denis', 'surname': 'Diderot', 'age': 27, 'tech': True}
+# insertWithAQL(doc, 'Students')
+
+def updateWithAQL(doc, key, collection):
+   bind = {"doc": doc, "key": key}
+   aql = "UPDATE @key WITH @doc IN " + collection
+   result = db.AQLQuery(aql, bindVars=bind)
+   print("Os dados foram atualizado com sucesso")
+
+doc = {"age": 25}
+# updateWithAQL(doc, '6424', 'Students')
+
+def listWithFilterAQL():
+   sample_chars_query = """
+      FOR c IN Students
+         FILTER c.tech == true
+         SORT c.name
+         LIMIT 10
+         RETURN { Nome: c.name, Sobrenome: c.surname, Idade: c.age }
+   """
+   query_result = db.AQLQuery(sample_chars_query, rawResults=True)
+   for doc in  query_result:
+      print(doc, sep='\n')
+
+# listWithFilter()
+
+def deleteWithAQL():
+   bind = {"@collection": "Students"}
+   aql = """
+      FOR x IN @@collection
+         FILTER x.age == 25
+         REMOVE x IN @@collection
+         LET removed = OLD RETURN removed
+   """
+   aql = "REMOVE @key IN @@collection"
+   queryResult = db.AQLQuery(aql, bindVars=bind)
+   print(queryResult)
+
+# deleteWithAQL()
